@@ -28,15 +28,11 @@ public class PathFollowerControl extends SimpleControl {
     protected Cohesion cohesion = new Cohesion();
     protected Separation separation = new Separation();
     protected float radius = 10f;
-    private Path path;
     private float minDistanceToWaypoint = 5f;
-    private int last;
     boolean arrived;
 
-    public PathFollowerControl(SteerControl outer, Path path) {
+    public PathFollowerControl(SteerControl outer) {
         this.outer = outer;
-        this.path = path;
-        last = 0;
         arrived = false;
     }
 
@@ -53,27 +49,27 @@ public class PathFollowerControl extends SimpleControl {
         Vector3f cohesionForce = this.cohesion.calculateForce(self.getWorldTranslation(), neighbors);
         Vector3f alignmentForce = this.alignment.calculateForce(self.velocity, neighbors);
         Vector3f momentumForce = self.velocity;
+        Vector3f persuitForce = persuit.calculateForce(self.getWorldTranslation(), self.velocity, self.speed, 0f, tpf, Vector3f.ZERO, self.flock.path.getWaypoints().get(self.flock.lastPath).getPosition());
 
         cohesionForce.multLocal(0.5f);
         alignmentForce.multLocal(0.5f);
-        seperationForce.multLocal(50f);
+        seperationForce.multLocal(100f);
         momentumForce.multLocal(1f);
+        persuitForce.multLocal(1f);
 
-        Vector3f flock = seperationForce.add(cohesionForce).add(alignmentForce).add(momentumForce);
+        Vector3f flock = seperationForce.add(cohesionForce).add(alignmentForce).add(momentumForce).add(persuitForce);
 
         minDistanceToWaypoint = self.collisionRadius * 5;
 
-        if (minDistanceToWaypoint >= path.getWaypoints().get(last).getPosition().distance(self.getWorldTranslation())) {
-            last++;
-            if (last >= path.getWaypoints().size()) {
+        if (minDistanceToWaypoint >= self.flock.path.getWaypoints().get(self.flock.lastPath).getPosition().distance(self.getWorldTranslation())) {
+            self.flock.lastPath++;
+            if (self.flock.lastPath >= self.flock.path.getWaypoints().size()) {
                 arrived = true;
-                last--;
+                self.flock.lastPath--;
                 self.velocity = Vector3f.ZERO;
             }
         }
 
-        Vector3f persuitForce = persuit.calculateForce(self.getWorldTranslation(), self.velocity, self.speed, 0f, tpf, Vector3f.ZERO, path.getWaypoints().get(last).getPosition());
-
-        self.updateVelocity(persuitForce.add(flock), tpf);
+        self.updateVelocity(flock, tpf);
     }
 }
