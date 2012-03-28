@@ -103,7 +103,8 @@ public class TestSteering extends SimpleApplication implements SteerControl, Act
         if (buildNavigationPath) {
             for (Path.Waypoint p : path.getWaypoints()) {
                 Vector3f v = p.getPosition();
-
+                v.y = 0;
+                p.setPosition(v);
                 array.add(createSphereAtPoint(v, ColorRGBA.Pink));
             }
             array.add(createSphereAtPoint(path.getEnd().getPosition(), ColorRGBA.Cyan));
@@ -126,6 +127,9 @@ public class TestSteering extends SimpleApplication implements SteerControl, Act
 
         inputManager.addMapping("3", new KeyTrigger(KeyInput.KEY_3));
         inputManager.addListener(this, "3");
+        
+        inputManager.addMapping("4", new KeyTrigger(KeyInput.KEY_4));
+        inputManager.addListener(this, "4");
     }
 
     private void setupCamera() {
@@ -139,7 +143,7 @@ public class TestSteering extends SimpleApplication implements SteerControl, Act
         obstacleNode = new Node("Obstacles");
         friendNode = new Node("Friends");
 
-        int amount = 10;
+        int amount = 100;
 
         // create obstacles
         for (int i = 0; i < amount; i++) {
@@ -157,8 +161,9 @@ public class TestSteering extends SimpleApplication implements SteerControl, Act
             f.add(neighbour);
             neighbour.setLocalTranslation(((float) Math.random()) * 5f, 0, ((float) Math.random()) * 5f);
             neighbour.addControl(new FlockerControl(this));
-            friendNode.attachChild(neighbour);
         }
+
+        friendNode.attachChild(f);
 
         Vehicle v = new Vehicle(ColorRGBA.LightGray, this);
         v.addControl(new WanderControl());
@@ -195,6 +200,9 @@ public class TestSteering extends SimpleApplication implements SteerControl, Act
 
     @Override
     public void simpleUpdate(float tpf) {
+        if (flock != null) {
+            //flock.move(1*tpf, 1*tpf, 1*tpf);
+        }
     }
 
     /**
@@ -230,7 +238,7 @@ public class TestSteering extends SimpleApplication implements SteerControl, Act
                     Vehicle v = (Vehicle) s;
                     float d = source.getWorldTranslation().subtract(v.getWorldTranslation()).lengthSquared();
                     if (d < r2) // if it is within the radius
-                        if (!source.flock.contains(v))
+                        if (!source.flock.has(v))
                             obstacles.add(v.toObstacle());
                 }
 
@@ -244,12 +252,13 @@ public class TestSteering extends SimpleApplication implements SteerControl, Act
     public List<Obstacle> neighboursNearby(AbstractVehicle source, float radius) {
         List<Obstacle> neighbours = new ArrayList<Obstacle>();
         float r2 = radius * radius;
-        for (Spatial s : friendNode.getChildren())
+        Node n = source.flock != null ? source.flock : friendNode;
+        for (Spatial s : n.getChildren())
             if (s instanceof Vehicle && !s.equals(source)) {
                 Vehicle v = (Vehicle) s;
                 float d = source.getWorldTranslation().subtract(v.getWorldTranslation()).lengthSquared();
                 if (d < r2) // if it is within the radius
-                    if (source.flock != null && source.flock.contains(v))
+                    if (source.flock != null && source.flock.has(v))
                         neighbours.add(v.toObstacle());
                     else if (source.flock == null)
                         neighbours.add(v.toObstacle());
@@ -270,7 +279,7 @@ public class TestSteering extends SimpleApplication implements SteerControl, Act
     private Vector3f pos2;
     private Spatial g1;
     private Spatial g2;
-    private ArrayList<Vehicle> navigator = new ArrayList<Vehicle>();
+    private Flock flock;
 
     @Override
     public void onAction(String name, boolean isPressed, float tpf) {
@@ -309,27 +318,29 @@ public class TestSteering extends SimpleApplication implements SteerControl, Act
                 if (pos1 != null && pos2 != null) {
                     Path navmesh1 = navmesh(pos1, pos2);
                     if (navmesh1 != null) {
-                        for (Vehicle v : navigator) {
-                            v.removeFromParent();
-                        }
+                        if (flock != null)
+                            flock.removeFromParent();
                         int amount = 30;
                         float random = 10f;
-                        Flock<AbstractVehicle> f = new Flock<AbstractVehicle>();
-                        f.path = navmesh1;
+                        flock = new Flock<AbstractVehicle>();
+                        flock.setPath(navmesh1);
                         for (int i = 0; i < amount; i++) {
                             Vehicle v = new Vehicle(ColorRGBA.White, this);
                             v.addControl(new PathFollowerControl(this));
                             //v.maxSpeed = 10f;
                             //v.speed = 10f;
                             v.setLocalTranslation(pos1.add(FastMath.nextRandomFloat() * random - random / 2, 0, FastMath.nextRandomFloat() * random - random / 2));
-                            v.flock = f;
-                            f.add(v);
-                            navigator.add(v);
-                            friendNode.attachChild(v);
+                            v.flock = flock;
+                            flock.add(v);
                         }
+                        friendNode.attachChild(flock);
                     }
                 }
+            } else if (name.equals("4")) {
+                flock.registerFormation();
+                
             }
+            
         }
     }
 }

@@ -16,9 +16,13 @@ import com.jme3.ai.steering.utilities.SteerControl;
 class Vehicle extends AbstractVehicle {
 
     private SteerControl steerControl;
+    // debug geoms
+    protected Geometry collisionLine;
+    protected Geometry velocityLine;
 
     public Vehicle(ColorRGBA color, SteerControl steerControl) {
         this.steerControl = steerControl;
+        
 
         Box b = new Box(Vector3f.ZERO, 0.1f, 0.1f, 0.2f);
         Geometry geom = new Geometry("Box", b);

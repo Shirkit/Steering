@@ -6,7 +6,6 @@ import com.jme3.ai.steering.behaviour.Separation;
 import com.jme3.ai.steering.utilities.AbstractVehicle;
 import com.jme3.ai.steering.utilities.Obstacle;
 import com.jme3.ai.steering.utilities.SteerControl;
-import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,12 +48,5 @@ public class FlockerControl extends SimpleControl {
         Vector3f last = seperationForce.add(cohesionForce).add(alignmentForce).add(momentumForce);
 
         self.updateVelocity(last, tpf);
-    }
-
-    public Vector3f randomness() {
-        float x = FastMath.nextRandomFloat() * 2f - 1.0f;
-        float y = FastMath.nextRandomFloat() * 2f - 1.0f;
-        float l = FastMath.sqrt(x * x + y * y);
-        return new Vector3f(0.05f * x / l, 0f, 0.05f * y / l);
     }
 }

@@ -4,6 +4,8 @@
  */
 package com.jme3.ai.steering.behaviour;
 
+import com.jme3.ai.steering.utilities.AbstractVehicle;
+import com.jme3.ai.steering.utilities.Flock;
 import com.jme3.ai.steering.utilities.Obstacle;
 import com.jme3.math.Vector3f;
 import java.util.List;

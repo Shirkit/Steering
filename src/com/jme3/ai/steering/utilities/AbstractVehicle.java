@@ -2,7 +2,6 @@ package com.jme3.ai.steering.utilities;
 
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
-import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 
 /**
@@ -19,9 +18,6 @@ public abstract class AbstractVehicle extends Node {
     public float collisionRadius = 0.4f;
     public Vector3f velocity = Vector3f.ZERO;
     public Flock<AbstractVehicle> flock;
-    // debug geoms
-    protected Geometry collisionLine;
-    protected Geometry velocityLine;
 
     /**
      * Take the steering influence and apply the vehicle's mass, max speed,
